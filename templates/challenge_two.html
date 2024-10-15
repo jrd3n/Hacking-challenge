@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Challenge Two</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <!-- Custom Styles (optional) -->
+    <style>
+        body {
+            padding-top: 70px;
+        }
+        .challenge-container {
+            max-width: 500px;
+            margin: auto;
+        }
+        .hint {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar (optional) -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+        <a class="navbar-brand" href="#">Hacking Challenge</a>
+    </nav>
+
+    <div class="container challenge-container">
+        <h2 class="mt-5 mb-4 text-center">Challenge Two: Client-Side Authentication</h2>
+
+        <p class="text-center">Enter the correct username and password to proceed.</p>
+
+        <form id="authForm" method="POST" action="{{ url_for('challenge_two') }}">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" class="form-control" placeholder="Enter username" required autofocus>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" class="form-control" placeholder="Enter password" required>
+            </div>
+            <!-- Optional hint (less direct) -->
+            <p class="hint text-center mt-3">Hint: You might find useful information by exploring the page's source code.<br>Press f12 and look at the elements, specifically the script.</p>
+            <button type="submit" class="btn btn-primary btn-block mt-4" onclick="checkAuth()">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        function checkAuth() {
+
+            var username = 'user'
+            var password = 'password123'
+
+            const username_form = document.getElementById('username').value;
+            const password_form = document.getElementById('password').value;
+
+            if (username_form === username && password_form === password) {
+                // Authentication successful
+                // alert("Authentication successful!");
+                // Submit the form to send a POST request
+                document.getElementById('authForm').submit();
+
+            } else {
+                alert("Incorrect credentials. Try again.");
+            }
+        }
+    </script>
+
+    <!-- Include Bootstrap JS and dependencies (optional if not needed) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+</body>
+</html>

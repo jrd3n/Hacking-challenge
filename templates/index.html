@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Hacking Challenge Leaderboard</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <!-- Custom Styles -->
+    <style>
+        body {
+            padding-top: 70px;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+        }
+
+        .table th,
+        .table td {
+            vertical-align: middle;
+        }
+
+        .modal-header h5 {
+            font-weight: bold;
+        }
+
+        .leaderboard-title {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar with Start Button -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+        <a class="navbar-brand" href="#">Hacking Challenge</a>
+        <button class="btn btn-primary ml-auto" data-toggle="modal" data-target="#startModal">Start</button>
+    </nav>
+
+    <div class="container">
+        <h1 class="leaderboard-title text-center">Leaderboard</h1>
+        <!-- Scoreboard Table -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Total Time (s)</th>
+                    <th>Challenge 1 Time (s)</th>
+                    <th>Challenge 2 Time (s)</th>
+                    <th>Challenge 3 Time (s)</th>
+                    <th>Challenge 4 Time (s)</th>
+                    <th>Comment</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard">
+                {% for user in sorted_users %}
+                <tr>
+                    <td>{{ user['username'] }}</td>
+                    <td>{{ '%.1f' % user['total_time'] if user['total_time'] is not none else 'N/A' }}</td>
+                    <td>{{ '%.1f' % user['completion_times'].get('challenge_one') if user['completion_times'].get('challenge_one') else 'N/A' }}</td>
+                    <td>{{ '%.1f' % user['completion_times'].get('challenge_two') if user['completion_times'].get('challenge_two') else 'N/A' }}</td>
+                    <td>{{ '%.1f' % user['completion_times'].get('challenge_three') if user['completion_times'].get('challenge_three') else 'N/A' }}</td>
+                    <td>{{ '%.1f' % user['completion_times'].get('challenge_four') if user['completion_times'].get('challenge_four') else 'N/A' }}</td>
+                    <td>{{ user['comment']|safe }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            
+            
+        </table>
+
+    </div>
+
+
+    <!-- Start Modal -->
+    <div class="modal fade" id="startModal" tabindex="-1" role="dialog" aria-labelledby="startModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form action="{{ url_for('start') }}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="startModalLabel">Start Challenge</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        {% if username %}
+                        <p>Welcome back, <strong>{{ username }}</strong>!</p>
+                        {% else %}
+                        <div class="form-group">
+                            <label for="name">Enter your name:</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        {% endif %}
+                        <!-- Challenge Buttons -->
+                
+                        <div class="form-group">
+                            {% set user = users.get(username) %}
+                            {% set challenge_routes = {
+                                1: 'challenge_one',
+                                2: 'challenge_two',
+                                3: 'challenge_three',
+                                4: 'challenge_four',
+                                5: 'challenge_five'
+                            } %}
+                            {% if user %}
+                                {% for i in range(1, 6) %}
+                                    {% set challenge_route = challenge_routes[i] %}
+                                    {% if i == user.current_challenge %}
+                                        <!-- Enable button for current challenge -->
+                                        {% if i == 3 %}
+                                            <!-- For Challenge Three, include authenticated=False in the URL -->
+                                            <a href="{{ url_for(challenge_route, authenticated='False') }}" class="btn btn-primary btn-block mb-2">
+                                                Challenge {{ i }}
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ url_for(challenge_route) }}" class="btn btn-primary btn-block mb-2">
+                                                Challenge {{ i }}
+                                            </a>
+                                        {% endif %}
+                                    {% elif i < user.current_challenge %}
+                                        <!-- Mark completed challenges -->
+                                        <a href="#" class="btn btn-success btn-block mb-2 disabled">
+                                            Challenge {{ i }} (Completed)
+                                        </a>
+                                    {% elif i > user.current_challenge %}
+                                        <!-- Disable button for upcoming challenges -->
+                                        <a href="#" class="btn btn-secondary btn-block mb-2 disabled">
+                                            Challenge {{ i }}
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <p>Please enter your name to start the challenges.</p>
+                            {% endif %}
+                        </div>
+                        
+
+                    </div>
+
+                    <div class="modal-footer">
+                        {% if not username %}
+                        <button type="submit" class="btn btn-primary">Start</button>
+                        {% endif %}
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery, Popper.js, and Bootstrap JS -->
+    <!-- Removed 'integrity' and 'crossorigin' attributes -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+
+    <!-- Socket.IO -->
+    <!-- Updated to version compatible with Flask-SocketIO 5.x -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.min.js"></script>
+
+    <!-- Custom Script -->
+    <script>
+        var socket = io({
+            transports: ['websocket']
+        });
+
+        socket.on('connect', function () {
+            console.log('Connected to server');
+        });
+
+        socket.on('update_leaderboard', function (data) {
+            // Update the leaderboard with the new user data
+            updateLeaderboard(data.users);
+        });
+
+        function updateLeaderboard(users) {
+            var leaderboard = document.getElementById('leaderboard');
+            leaderboard.innerHTML = '';
+            users.forEach(function (user) {
+                var row = '<tr>' +
+                    '<td>' + user.username + '</td>' +
+                    '<td>' + (user.completion_times.challenge_one || 'N/A') + '</td>' +
+                    '<td>' + (user.completion_times.challenge_two || 'N/A') + '</td>' +
+                    '<td>' + (user.completion_times.challenge_three || 'N/A') + '</td>' +
+                    '<td>' + (user.completion_times.challenge_four || 'N/A') + '</td>' + // New Data
+                    '<td>' + (user.comment || '') + '</td>' +
+                    '</tr>';
+                leaderboard.innerHTML += row;
+            });
+        }
+
+    </script>
+</body>
+
+</html>

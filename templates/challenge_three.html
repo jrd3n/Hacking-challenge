@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Challenge Three</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <!-- Custom Styles (optional) -->
+    <style>
+        body {
+            padding-top: 70px;
+        }
+        .challenge-container {
+            max-width: 500px;
+            margin: auto;
+        }
+        .hint {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar (optional) -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+        <a class="navbar-brand" href="#">Hacking Challenge</a>
+    </nav>
+
+    <div class="container challenge-container">
+        <h2 class="mt-5 mb-4 text-center">Challenge Three: Hidden Authentication</h2>
+
+        <p class="text-center">This is not a username and password challenge.</p>
+
+        <!-- Display error message if authentication fails -->
+        {% if error %}
+            <div class="alert alert-danger text-center">{{ error }}</div>
+        {% endif %}
+
+        <form method="GET" action="{{ url_for('challenge_three') }}">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" disabled>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" disabled>
+            </div>
+            <!-- Optional hint (less direct) -->
+            <p class="hint text-center mt-3">Hint: You are not authenticated. Look around, is there anything you could change.<br>Note: You don't need to open the page's source code.</p>
+            <button type="submit" class="btn btn-primary btn-block mt-4" disabled>Submit</button>
+        </form>    </div>
+
+    <!-- Include Bootstrap JS and dependencies (optional) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+</body>
+</html>
