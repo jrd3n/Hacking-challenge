@@ -12,12 +12,8 @@ from flask import Flask, render_template, request, redirect, url_for, make_respo
 from datetime import datetime
 import csv
 
-
-
-
 app = Flask(__name__)
 app.secret_key = 'your_unique_secret_key'
-
 
 # Store user data
 users = {}
@@ -32,16 +28,13 @@ def save_users_to_csv():
         writer.writeheader()
 
         for user in users.values():
-            def format_time(value):
-                return '%.1f' % value if isinstance(value, (int, float)) else 'N/A'
-
             writer.writerow({
                 'User': user['username'],
-                'Total Time (s)': format_time(user['total_time']),
-                'Challenge 1 Time (s)': format_time(user['challenge_1_time']),
-                'Challenge 2 Time (s)': format_time(user['challenge_2_time']),
-                'Challenge 3 Time (s)': format_time(user['challenge_3_time']),
-                'Challenge 4 Time (s)': format_time(user['challenge_4_time']),
+                'Total Time (s)': '%.1f' % user['total_time'] if user['total_time'] is not None else 'N/A',
+                'Challenge 1 Time (s)': '%.1f' % user['challenge_1_time'] if user['challenge_1_time'] is not None else 'N/A',
+                'Challenge 2 Time (s)': '%.1f' % user['challenge_2_time'] if user['challenge_2_time'] is not None else 'N/A',
+                'Challenge 3 Time (s)': '%.1f' % user['challenge_3_time'] if user['challenge_3_time'] is not None else 'N/A',
+                'Challenge 4 Time (s)': '%.1f' % user['challenge_4_time'] if user['challenge_4_time'] is not None else 'N/A',
                 'Comment': user['comment'],
                 'Current Challenge': user['current_challenge'],
                 'Start Time': user['start_time'].isoformat() if user['start_time'] else 'N/A'
@@ -140,43 +133,40 @@ def record_start_time(username, challenge):
     if not user['start_time']:
         user['start_time'] = datetime.now()
 
+        save_users_to_csv()
+
+    print(user)
+
 def record_completion_time(username, challenge):
     """Record the completion time for a challenge."""
     user = users[username]
 
-    if 'start_time' in user and user['start_time']:
+    if 'start_time' in user and user['start_time'] is not None:
         start_time = user['start_time']
         completion_time = (datetime.now() - start_time).total_seconds()
-        
-        # Record the completion time for the current challenge
-        user[f'{challenge}_time'] = completion_time
 
-        # Clear the start time for the next challenge
+        user[f'challenge_{challenge}_time'] = completion_time
+
+        # Reset start time for the next challenge
         user['start_time'] = None
 
-        # Check if all challenge times are completed before calculating total time
-        if all([
-            user.get('challenge_1_time') is not None,
-            user.get('challenge_2_time') is not None,
-            user.get('challenge_3_time') is not None,
-            user.get('challenge_4_time') is not None
-        ]):
-            # Recalculate total time only if all challenges are completed
+        if user['current_challenge'] == 1:
+            user['current_challenge'] = 2
+        elif user['current_challenge'] == 2:
+            user['current_challenge'] = 3
+        elif user['current_challenge'] == 3:
+            user['current_challenge'] = 4
+
+        print(user)
+
+        # Update the total time if all challenges are complete
+        if all(user.get(f'challenge_{i}_time') is not None for i in range(1, 5)):
             user['total_time'] = sum(
-                time for time in [
-                    user.get('challenge_1_time'),
-                    user.get('challenge_2_time'),
-                    user.get('challenge_3_time'),
-                    user.get('challenge_4_time')
-                ]
+                user[f'challenge_{i}_time'] for i in range(1, 5)
             )
-        else:
-            # Set total time to None if not all challenges are completed
-            user['total_time'] = None
 
         # Save the updated user data to the CSV
         save_users_to_csv()
-
 
 @app.route('/challenge_one', methods=['GET', 'POST'])
 def challenge_one():
@@ -196,10 +186,14 @@ def challenge_one():
         password = request.form.get('password')
 
         if input_username.lower() == 'admin' and password.lower() == 'admin':
-            record_completion_time(username, 'challenge_one')
+
+            record_completion_time(username, '1')
+
             return redirect(url_for('index'))
         else:
-            return render_template('challenge_one.html', error="Incorrect credentials.")
+
+            return render_template('challenge_one.html', error="Incorrect credentials.<br>Try admin:admin")
+        
     return render_template('challenge_one.html')
 
 @app.route('/challenge_two', methods=['GET', 'POST'])
@@ -215,7 +209,7 @@ def challenge_two():
     record_start_time(username, 'challenge_two')
 
     if request.method == 'POST':
-        record_completion_time(username, 'challenge_two')
+        record_completion_time(username, '2')
         return redirect(url_for('index'))
 
     return render_template('challenge_two.html')
@@ -237,7 +231,7 @@ def challenge_three():
     form_password = request.args.get('password', '').lower()
 
     if authenticated == 'true':
-        record_completion_time(username, 'challenge_three')
+        record_completion_time(username, '3')
         return redirect(url_for('index'))
     elif form_username == 'admin' and form_password == 'password':
         error = "Authentication method not accepted.<br>look at the url!"
@@ -259,7 +253,7 @@ def challenge_four():
 
     authenticated_cookie = request.cookies.get('authenticated', 'False').lower()
     if authenticated_cookie == 'true':
-        record_completion_time(username, 'challenge_four')
+        record_completion_time(username, '4')
         return redirect(url_for('index'))
     else:
         if request.method == 'POST':
